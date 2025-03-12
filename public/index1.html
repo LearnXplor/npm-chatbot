@@ -1,0 +1,348 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MENIIT AI - By Pallav</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    #chat { border: 1px solid #ccc; padding: 10px; width: 500px; height: 400px; overflow-y: scroll; margin-bottom: 10px; }
+    #messageInput { width: 400px; }
+  </style>
+</head>
+<body>
+  <h1>MENIIT AI</h1>
+  <div id="chat"></div>
+  <input type="text" id="messageInput" placeholder="Type your message here..." />
+  <button id="sendBtn">Send</button>
+
+  <script>
+    const chatDiv = document.getElementById('chat');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', function(e) {
+      if(e.key === 'Enter') sendMessage();
+    });
+
+    function appendMessage(sender, message) {
+      const msgElem = document.createElement('p');
+      msgElem.textContent = sender + ": " + message;
+      chatDiv.appendChild(msgElem);
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const message = messageInput.value.trim();
+      if(!message) return;
+      appendMessage('You', message);
+      messageInput.value = '';
+      const response = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+      const data = await response.json();
+      appendMessage('Bot', data.reply);
+    }
+  </script>
+</body>
+</html>
+
+<!-- //Sentimental Analysis  -->
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sentiment Analysis Service</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: block;
+      margin: 0 auto;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e9e9e9;
+      border-radius: 4px;
+      font-size: 18px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Sentiment Analysis</h1>
+    <p>Enter text below and click <strong>Analyze Sentiment</strong> to see the sentiment score.</p>
+    <textarea id="inputText" placeholder="Type your text here..."></textarea>
+    <button id="analyzeBtn">Analyze Sentiment</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resultDiv = document.getElementById('result');
+
+    analyzeBtn.addEventListener('click', async () => {
+      const text = document.getElementById('inputText').value.trim();
+      if (!text) {
+        resultDiv.innerHTML = 'Please enter some text to analyze.';
+        return;
+      }
+      resultDiv.innerHTML = 'Analyzing...';
+
+      try {
+        const response = await fetch('/sentiment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text })
+        });
+        const data = await response.json();
+        if (data.error) {
+          resultDiv.innerHTML = 'Error: ' + data.error;
+        } else {
+          resultDiv.innerHTML = `<strong>Sentiment Score:</strong> ${data.sentimentScore}`;
+        }
+      } catch (err) {
+        resultDiv.innerHTML = 'Error: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html> -->
+
+
+
+
+<!-- Conversation Purchase Prediction -->
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Conversation Purchase Prediction</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 20px auto;
+    }
+    button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    .result {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Conversation Purchase Prediction</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input type="file" name="conversationFile" id="conversationFile" accept=".json" required>
+      <button type="submit">Predict Purchase Probability</button>
+    </form>
+    <div class="result" id="result"></div>
+  </div>
+  <script>
+    const form = document.getElementById('uploadForm');
+    const resultDiv = document.getElementById('result');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('conversationFile');
+      if (!fileInput.files[0]) {
+        resultDiv.innerHTML = 'Please select a file.';
+        return;
+      }
+      const formData = new FormData();
+      formData.append('conversationFile', fileInput.files[0]);
+
+      resultDiv.innerHTML = 'Analyzing...';
+      try {
+        const response = await fetch('/predict', {
+          method: 'POST',
+          body: formData
+        });
+        const text = await response.text();
+        resultDiv.innerHTML = text;
+      } catch (error) {
+        resultDiv.innerHTML = 'Error: ' + error.message;
+      }
+    });
+  </script>
+</body>
+</html> -->
+
+
+<!-- AI with call recording upload  -->
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Conversation & Call Recording Prediction</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    form {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 20px auto;
+    }
+    button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    .result {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Deal Prediction Service</h1>
+    
+    <h2>Upload Conversation JSON</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input type="file" name="conversationFile" id="conversationFile" accept=".json" required>
+      <button type="submit">Predict from Conversation</button>
+    </form>
+    
+    <h2>Upload Call Recording</h2>
+    <form id="uploadCallForm" enctype="multipart/form-data">
+      <input type="file" name="callRecording" id="callRecording" accept="audio/*" required>
+      <button type="submit">Predict from Call Recording</button>
+    </form>
+    
+    <div class="result" id="result"></div>
+  </div>
+  
+  <script>
+    const resultDiv = document.getElementById('result');
+    
+    // Function to handle file uploads
+    async function handleUpload(formId, endpoint) {
+      const form = document.getElementById(formId);
+      const fileInput = form.querySelector('input[type="file"]');
+      if (!fileInput.files[0]) {
+        resultDiv.innerHTML = 'Please select a file.';
+        return;
+      }
+      const formData = new FormData();
+      formData.append(fileInput.name, fileInput.files[0]);
+      
+      resultDiv.innerHTML = 'Analyzing...';
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: formData
+        });
+        const text = await response.text();
+        resultDiv.innerHTML = text;
+      } catch (error) {
+        resultDiv.innerHTML = 'Error: ' + error.message;
+      }
+    }
+    
+    // Handle conversation JSON upload
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      handleUpload('uploadForm', '/predict');
+    });
+    
+    // Handle call recording upload
+    document.getElementById('uploadCallForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      handleUpload('uploadCallForm', '/predict-call');
+    });
+  </script>
+</body>
+</html> -->

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PallavAI Chatbot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    
+    <button id="chat-toggle" class="fixed bottom-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition">
+        🤖
+    </button>
+    
+    <div id="chat-container" class="hidden fixed bottom-16 right-6 w-80 bg-white shadow-xl rounded-lg overflow-hidden">
+        <div class="bg-blue-600 text-white text-center py-4 flex justify-between items-center px-4">
+            <h2 class="text-xl font-semibold">PallavAI Chatbot</h2>
+            <button id="close-chat" class="text-white text-lg">✖</button>
+        </div>
+        <div id="chat-box" class="p-4 h-80 overflow-y-auto space-y-2"></div>
+        <div class="p-4 flex flex-col gap-2 border-t">
+            <div id="class-suggestions" class="flex flex-wrap gap-2 mb-2 hidden">
+                <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('Class 6')">Class 6</button>
+                <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('Class 7')">Class 7</button>
+                <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('Class 8')">Class 8</button>
+                <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('Class 9')">Class 9</button>
+                <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('Class 10')">Class 10</button>
+                <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('Class 11')">Class 11</button>
+                <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('Class 12')">Class 12</button>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="text" id="user-input" class="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your message..." autocomplete="off">
+                <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById("chat-toggle").addEventListener("click", function() {
+            document.getElementById("chat-container").classList.remove("hidden");
+        });
+
+        document.getElementById("close-chat").addEventListener("click", function() {
+            document.getElementById("chat-container").classList.add("hidden");
+        });
+
+        document.getElementById("user-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            let userInput = document.getElementById("user-input");
+            let message = userInput.value.trim();
+            if (message === "") return;
+            appendMessage(message, 'user');
+            userInput.value = "";
+            
+            if (/class\s*\d+/i.test(message)) {
+                document.getElementById("class-suggestions").classList.remove("hidden");
+            } else {
+                fetchResponse(message);
+            }
+        }
+
+        function sendSuggestedMessage(message) {
+            appendMessage(message, 'user');
+            document.getElementById("class-suggestions").classList.add("hidden");
+            fetchResponse(message);
+        }
+
+        function appendMessage(message, sender) {
+            let chatBox = document.getElementById("chat-box");
+            let messageDiv = `<div class='${sender === 'user' ? 'bg-gray-200 text-right' : 'bg-blue-500 text-white'} p-2 rounded-md'>${message}</div>`;
+            chatBox.innerHTML += messageDiv;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function fetchResponse(message) {
+            fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
+            })
+            .then(response => response.json())
+            .then(data => appendMessage(data.reply, 'bot'))
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+</html>

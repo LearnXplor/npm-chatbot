@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PallavAI Chatbot</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+  <style>
+    .message-box { margin: 10px 0; padding: 8px; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .greeting-box { background: #e0f7fa; border: 2px solid #4dd0e1; }
+    .ai-box { background: #e8eaf6; border: 2px solid #9fa8da; }
+    .correct-box { background: #e8f5e9; border: 2px solid #66bb6a; }
+    .incorrect-box { background: #ffebee; border: 2px solid #ef5350; }
+    .solution-box { background: #e3f2fd; border: 2px solid #42a5f5; }
+    .next-question-box { background: #fff3e0; border: 2px solid #ffb74d; }
+    .error-box { background: #ffebee; border: 2px solid #e57373; padding: 5px; margin: 5px 0; }
+    .topic-box { font-weight: bold; margin-bottom: 5px; }
+    .topics-container { display: flex; flex-direction: column; gap: 5px; }
+    .topic-button, .next-btn { background: #c5cae9; padding: 10px; border-radius: 8px; border: none; cursor: pointer; text-align: left; transition: background 0.3s; }
+    .topic-button:hover, .next-btn:hover { background: #9fa8da; }
+    /* Points display styling */
+    #pointsDisplay { font-weight: bold; }
+    /* Chat Toggle Button styling with GIF icon */
+    #chat-toggle {
+      position: fixed;
+      bottom: 1.5rem; right: 1.5rem;
+      background: transparent;
+      border: none;
+      padding: 0;
+      z-index: 1000;
+    }
+    #chat-toggle img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+  
+  <button id="chat-toggle">
+    <img src="/animation.gif" alt="Chat Icon" />
+  </button>
+
+  <div id="chat-container" class="hidden fixed bottom-16 right-6 w-80 bg-white shadow-xl rounded-lg overflow-hidden">
+    <div class="bg-blue-600 text-white text-center py-4 flex justify-between items-center px-4">
+      <h2 class="text-xl font-semibold">PALLAV's Chatbot</h2>
+      <div id="pointsDisplay">Points: <span id="points">0</span></div>
+      <button id="close-chat" class="text-white text-lg">✖</button>
+    </div>
+    <div id="chat-box" class="p-4 h-80 overflow-y-auto space-y-2"></div>
+    <div class="p-4 flex flex-col gap-2 border-t">
+      <div id="class-suggestions" class="flex flex-wrap gap-2 mb-2">
+        <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('6')">Class 6</button>
+        <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('7')">Class 7</button>
+        <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('8')">Class 8</button>
+        <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('9')">Class 9</button>
+        <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('10')">Class 10</button>
+        <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('11')">Class 11</button>
+        <button class="bg-gray-200 px-3 py-2 rounded-md hover:bg-gray-300" onclick="sendSuggestedMessage('12')">Class 12</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="text" id="user-input" class="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your message..." autocomplete="off" />
+        <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      fetchResponse('');
+    });
+
+    document.getElementById("chat-toggle").addEventListener("click", function () {
+      document.getElementById("chat-container").classList.toggle("hidden");
+    });
+
+    document.getElementById("close-chat").addEventListener("click", function () {
+      document.getElementById("chat-container").classList.add("hidden");
+      document.getElementById("chat-box").innerHTML = "";
+      localStorage.setItem('points', '0');
+      document.getElementById('points').innerText = '0';
+      fetch("/reset", { method: "POST", headers: { "Content-Type": "application/json" } })
+        .then(response => response.json())
+        .then(data => console.log(data.reply))
+        .catch(error => console.error("Error resetting session:", error));
+      fetchResponse('');
+    });
+
+    document.getElementById("user-input").addEventListener("keypress", function (event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+    function sendMessage(message) {
+      const userInput = document.getElementById("user-input");
+      const msg = message || userInput.value.trim();
+      if (msg === "") return;
+      appendMessage(msg, 'user');
+      userInput.value = "";
+      fetchResponse(msg);
+    }
+
+    function sendSuggestedMessage(message) {
+      appendMessage(message, 'user');
+      document.getElementById("class-suggestions").style.display = 'none';
+      fetchResponse(message);
+    }
+
+    function appendMessage(message, sender) {
+      const chatBox = document.getElementById("chat-box");
+      const messageDiv = `<div class="message-box ${sender === 'user' ? 'bg-gray-200 text-right' : ''}">${message}</div>`;
+      chatBox.innerHTML += messageDiv;
+      chatBox.scrollTop = chatBox.scrollHeight;
+      if (sender === 'bot' && message.includes("Correct!")) {
+        updatePoints();
+        launchConfetti();
+      }
+    }
+
+    function fetchResponse(message) {
+      fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: message })
+      })
+      .then(response => response.json())
+      .then(data => {
+        appendMessage(data.reply, 'bot');
+      })
+      .catch(error => console.error("Error:", error));
+    }
+
+    function updatePoints() {
+      let points = parseInt(localStorage.getItem('points')) || 0;
+      points++;
+      localStorage.setItem('points', points.toString());
+      document.getElementById('points').innerText = points.toString();
+    }
+
+    function launchConfetti() {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+  </script>
+</body>
+</html>
