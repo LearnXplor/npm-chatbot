@@ -64,8 +64,13 @@ const TOPICS_PER_PAGE = 5;
 
 // Serve main page
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.send(`
+    <h1>🚀 NCERT Chatbot API is Running!</h1>
+    <p>To use the chatbot, make a POST request to <code>/chat</code> with a message.</p>
+  `);
 });
+
 
 // Reset session state
 app.post('/reset', (req, res) => {
